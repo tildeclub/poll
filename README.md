@@ -17,6 +17,7 @@ Basic steps include:
 3. Create a new table in the database named 'poll_votes" with the following structure:
 
         CREATE TABLE poll_votes (option_id INTEGER);
+        ALTER TABLE poll_votes ADD COLUMN ip_address TEXT;
   
 4. Create a text file named poll_options.txt and add the expiry date of the poll and the poll options to the file. The expiry date should be the first line of the file, followed by the poll options. Each poll option should be on a new line.
 

@@ -1,6 +1,7 @@
 <script src='https://www.google.com/recaptcha/api.js'></script>
-
+<link rel="stylesheet" href="styles.css"> 
 <?php
+
 // Include the secret and site key from a separate file
 require 'recaptcha_keys.php';
 
@@ -49,9 +50,19 @@ $response = file_get_contents($url, false, $context);
 $result = json_decode($response);
 if ($result->success) {
   // reCaptcha was successful
+ // Check if the user has already voted
+  $stmt = $db->prepare("SELECT COUNT(*) FROM poll_votes WHERE ip_address = ?");
+  $stmt->execute([$_SERVER['REMOTE_ADDR']]);
+  $count = $stmt->fetchColumn();
+  if ($count > 0) {
+    // User has already voted
+    echo "<p class='orange'>You have already voted in this poll.</p>";
+
+    exit;
+  }
   // Save the vote to the database
-  $stmt = $db->prepare("INSERT INTO poll_votes (option_id) VALUES (?)");
-  $stmt->execute([$_POST['option']]);
+  $stmt = $db->prepare("INSERT INTO poll_votes (option_id, ip_address) VALUES (?, ?)");
+  $stmt->execute([$_POST['option'], $_SERVER['REMOTE_ADDR']]);
 
   // Redirect the user to a different page
   header('Location: results.php');
@@ -59,7 +70,7 @@ if ($result->success) {
 } else {
   // reCaptcha was unsuccessful
   // Display an error message
-  echo "<p style='color: orange;'>There was an error with the reCaptcha. Please try again.</p>";
+  echo "<p class='orange'>There was an error with the reCaptcha. Please try again.</p>";
   }
 }
 
@@ -76,6 +87,8 @@ echo "<input type='submit' name='submit' value='Vote'>";
 echo "</form>";
 
 // Display the "View Results" link
-echo "<a href='results.php'>View Results</a>";
+// echo "<a href='results.php'>View Results</a>";
 
 ?>
+<button onclick="location.href='results.php'">View Results</button>
+<br>
